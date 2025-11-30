@@ -38,34 +38,58 @@ US_AIRPORTS = {
 def get_current_location():
     """
     Get current location using IP-based geolocation (free, no API key needed)
+    Tries multiple services with fallbacks
     
     Returns:
         dict: Location data with latitude, longitude, city, region, country
     """
-    try:
-        # Use ipapi.co - free IP geolocation service (no API key required)
-        response = requests.get('https://ipapi.co/json/', timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        
-        return {
-            "latitude": float(data.get('latitude', 0)),
-            "longitude": float(data.get('longitude', 0)),
-            "city": data.get('city', 'Unknown'),
-            "region": data.get('region', 'Unknown'),
-            "country": data.get('country_name', 'Unknown'),
-            "ip": data.get('ip', 'Unknown')
-        }
-    except Exception as e:
-        print(f"Error detecting location: {e}")
-        print("Using default location: Los Angeles, CA")
-        return {
-            "latitude": 34.0522,
-            "longitude": -118.2437,
-            "city": "Los Angeles",
-            "region": "California",
-            "country": "United States"
-        }
+    # Try multiple geolocation services
+    services = [
+        'https://ipapi.co/json/',
+        'http://ip-api.com/json/',
+        'https://freegeoip.app/json/'
+    ]
+    
+    for service_url in services:
+        try:
+            response = requests.get(service_url, timeout=5)
+            response.raise_for_status()
+            data = response.json()
+            
+            # Handle different response formats
+            if 'latitude' in data:  # ipapi.co format
+                return {
+                    "latitude": float(data.get('latitude', 0)),
+                    "longitude": float(data.get('longitude', 0)),
+                    "city": data.get('city', 'Unknown'),
+                    "region": data.get('region', 'Unknown'),
+                    "country": data.get('country_name', 'Unknown'),
+                    "ip": data.get('ip', 'Unknown')
+                }
+            elif 'lat' in data:  # ip-api.com format
+                return {
+                    "latitude": float(data.get('lat', 0)),
+                    "longitude": float(data.get('lon', 0)),
+                    "city": data.get('city', 'Unknown'),
+                    "region": data.get('regionName', 'Unknown'),
+                    "country": data.get('country', 'Unknown'),
+                    "ip": data.get('query', 'Unknown')
+                }
+        except Exception as e:
+            continue  # Try next service
+    
+    # All services failed - try to detect from system timezone
+    print("⚠️  Cannot reach geolocation services (network unreachable)")
+    print("💡 Please specify your home airport manually:")
+    print("   Example: TripPlanner(home_airport='ATL')")
+    print("\nUsing default location: Los Angeles, CA")
+    return {
+        "latitude": 34.0522,
+        "longitude": -118.2437,
+        "city": "Los Angeles",
+        "region": "California",
+        "country": "United States"
+    }
 
 def haversine_distance(lat1, lon1, lat2, lon2):
     """
@@ -123,10 +147,26 @@ def find_nearest_airport(latitude, longitude):
 def get_home_airport():
     """
     Detect current location and return nearest airport code
+    Checks environment variable first, then auto-detects
     
     Returns:
         str: Airport code (e.g., "LAX")
     """
+    import os
+    
+    # Check if HOME_AIRPORT is set in environment
+    env_airport = os.getenv('HOME_AIRPORT')
+    if env_airport:
+        print(f"\n✈️  Using airport from environment: {env_airport}")
+        if env_airport in US_AIRPORTS:
+            airport_info = US_AIRPORTS[env_airport]
+            print(f"📍 {airport_info['name']} - {airport_info['city']}\n")
+            return env_airport
+        else:
+            print(f"⚠️  Warning: '{env_airport}' not found in airport list")
+            print("   Falling back to auto-detection\n")
+    
+    # Auto-detect location
     location = get_current_location()
     
     print(f"\n📍 Detected location: {location['city']}, {location['region']}")

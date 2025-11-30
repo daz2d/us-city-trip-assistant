@@ -137,6 +137,19 @@ Plan a specific city:
 python trip_planner.py "New York City, NY"
 ```
 
+Specify your home airport:
+```bash
+# Via command line
+python trip_planner.py --airport ATL "New York City, NY"
+
+# Via environment variable
+export HOME_AIRPORT=ATL
+python trip_planner.py "New York City, NY"
+
+# Or add to .env file
+echo "HOME_AIRPORT=ATL" >> .env
+```
+
 Plan annual tour:
 ```bash
 python trip_planner.py
@@ -241,6 +254,20 @@ with open('nyc_trip.json', 'w') as f:
 5. **Seasonal Events**: Best months often coincide with major events (check city calendars)
 
 ## Troubleshooting
+
+### Network unreachable / Cannot detect location
+If you see "Network is unreachable" errors:
+```bash
+# Option 1: Set via environment variable
+export HOME_AIRPORT=ATL
+python trip_planner.py "New York City, NY"
+
+# Option 2: Set in .env file
+echo "HOME_AIRPORT=ATL" >> .env
+
+# Option 3: Use command line
+python trip_planner.py --airport ATL "New York City, NY"
+```
 
 ### No flights found
 - Check if airports are correct

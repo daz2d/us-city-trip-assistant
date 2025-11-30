@@ -250,12 +250,31 @@ class TripPlanner:
 def main():
     """Main entry point for trip planner"""
     import sys
+    import os
     
-    # Auto-detect home airport from current location
-    planner = TripPlanner()  # Automatically detects nearest airport
+    # Check for --airport command line argument
+    home_airport = None
+    city_name = None
     
-    if len(sys.argv) > 1:
-        city_name = " ".join(sys.argv[1:])
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        if args[i] in ['--airport', '-a']:
+            if i + 1 < len(args):
+                home_airport = args[i + 1]
+                i += 2
+            else:
+                print("Error: --airport requires an airport code")
+                sys.exit(1)
+        else:
+            city_name = " ".join(args[i:])
+            break
+    
+    # Auto-detect home airport from current location (or use specified one)
+    planner = TripPlanner(home_airport=home_airport)
+    
+    if city_name:
+        # Plan trip for specific city
         # Plan trip for next available optimal month
         for city, info in MAJOR_US_CITIES.items():
             if city.lower() == city_name.lower():
