@@ -4,6 +4,7 @@ A comprehensive trip planning tool that helps you visit all major US cities at t
 
 ## Features
 
+- **Auto-Location Detection** - Automatically finds your nearest airport using IP geolocation
 - **15 Major US Cities** - Pre-configured with optimal visit times for NYC, LA, Chicago, San Francisco, Miami, Las Vegas, Seattle, Boston, DC, New Orleans, Austin, Nashville, Denver, Portland, and San Diego
 - **Seasonal Optimization** - Each city includes best/worst months to visit based on weather and events
 - **Thursday-Sunday Trips** - Automatically finds 3-4 day weekend trips (Thu-Sun)
@@ -54,8 +55,11 @@ GOOGLE_MAPS_API_KEY=your_google_api_key_here
 ```python
 from trip_planner import TripPlanner
 
-# Initialize with your home airport
-planner = TripPlanner(home_airport="LAX")
+# Auto-detect nearest airport from your current location
+planner = TripPlanner()
+
+# Or manually specify home airport
+# planner = TripPlanner(home_airport="LAX")
 
 # Plan a trip to NYC in May 2026
 trip = planner.plan_city_trip("New York City, NY", 2026, 5)
@@ -69,7 +73,8 @@ print(planner.get_trip_summary(trip))
 ```python
 from trip_planner import TripPlanner
 
-planner = TripPlanner(home_airport="LAX")
+# Auto-detect your location
+planner = TripPlanner()
 
 # Plan visits to all cities starting January 2026
 tour = planner.plan_annual_tour(2026, 1)
@@ -169,9 +174,14 @@ python trip_planner.py
 
 ### Change Home Airport
 
-Edit the `TripPlanner` initialization:
+The planner auto-detects your location, but you can override it:
 ```python
-planner = TripPlanner(home_airport="ORD")  # Chicago
+planner = TripPlanner(home_airport="ORD")  # Force Chicago O'Hare
+```
+
+To test location detection:
+```bash
+python3 location_detector.py
 ```
 
 ### Adjust Hotel Radius

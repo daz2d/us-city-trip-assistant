@@ -8,16 +8,20 @@ from calendar import monthrange
 from city_data import MAJOR_US_CITIES, get_cities_by_month
 from flight_search import FlightSearcher
 from hotel_search import HotelSearcher
+from location_detector import get_home_airport
 
 class TripPlanner:
-    def __init__(self, home_airport="LAX"):
+    def __init__(self, home_airport=None):
         """
         Initialize trip planner
         
         Args:
-            home_airport: Your home airport code (default LAX)
+            home_airport: Your home airport code (optional - auto-detects if not provided)
         """
-        self.home_airport = home_airport
+        if home_airport is None:
+            self.home_airport = get_home_airport()
+        else:
+            self.home_airport = home_airport
         self.flight_searcher = FlightSearcher()
         self.hotel_searcher = HotelSearcher()
     
@@ -247,8 +251,8 @@ def main():
     """Main entry point for trip planner"""
     import sys
     
-    # Example usage
-    planner = TripPlanner(home_airport="LAX")  # Change to your home airport
+    # Auto-detect home airport from current location
+    planner = TripPlanner()  # Automatically detects nearest airport
     
     if len(sys.argv) > 1:
         city_name = " ".join(sys.argv[1:])
