@@ -45,6 +45,7 @@ Thumbs.db
 *.json
 *.csv
 !city_data.json
+city_cache.json
 
 # Logs
 *.log

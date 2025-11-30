@@ -9,6 +9,7 @@ from city_data import MAJOR_US_CITIES, get_cities_by_month
 from flight_search import FlightSearcher
 from hotel_search import HotelSearcher
 from location_detector import get_home_airport
+from dynamic_city_data import CityDataFetcher
 
 class TripPlanner:
     def __init__(self, home_airport=None):
@@ -24,13 +25,49 @@ class TripPlanner:
             self.home_airport = home_airport
         self.flight_searcher = FlightSearcher()
         self.hotel_searcher = HotelSearcher()
+        self.city_fetcher = CityDataFetcher()
+    
+    def get_city_data(self, city_name):
+        """
+        Get city data from static DB or fetch dynamically
+        
+        Args:
+            city_name: City name (e.g., "Atlanta, GA" or just "Atlanta")
+            
+        Returns:
+            tuple: (full_city_name, city_data)
+        """
+        # First try static database (exact match)
+        if city_name in MAJOR_US_CITIES:
+            return city_name, MAJOR_US_CITIES[city_name]
+        
+        # Try partial match in static DB
+        for city, data in MAJOR_US_CITIES.items():
+            if city_name.lower() in city.lower():
+                return city, data
+        
+        # Try to fetch dynamically
+        print(f"🔍 City not in database, searching dynamically...")
+        
+        # Parse city name and state
+        parts = [p.strip() for p in city_name.split(',')]
+        city_part = parts[0]
+        state_part = parts[1] if len(parts) > 1 else None
+        
+        city_data = self.city_fetcher.get_or_fetch_city(city_part, state_part)
+        
+        if city_data:
+            full_name = f"{city_part}, {state_part}" if state_part else city_part
+            return full_name, city_data
+        
+        return None, None
     
     def plan_city_trip(self, city_name, year, month, specific_thursday=None):
         """
         Plan a complete trip to a city
         
         Args:
-            city_name: Name of city (e.g., "New York City, NY")
+            city_name: Name of city (e.g., "New York City, NY" or "Phoenix")
             year: Year to visit
             month: Month to visit (1-12)
             specific_thursday: Optional specific Thursday date (datetime object)
@@ -38,9 +75,14 @@ class TripPlanner:
         Returns:
             Complete trip plan with flights and hotels
         """
-        city_info = MAJOR_US_CITIES.get(city_name)
+        # Get city data (static or dynamic)
+        full_city_name, city_info = self.get_city_data(city_name)
+        
         if not city_info:
-            return {"error": f"City {city_name} not found"}
+            return {"error": f"Could not find data for city: {city_name}"}
+        
+        if full_city_name != city_name:
+            print(f"📍 Found: {full_city_name}")
         
         # Check if month is optimal
         is_optimal = month in city_info['best_months']
@@ -79,7 +121,7 @@ class TripPlanner:
         )
         
         return {
-            "city": city_name,
+            "city": full_city_name,
             "travel_dates": {
                 "departure": thursday.strftime('%Y-%m-%d'),
                 "return": sunday.strftime('%Y-%m-%d'),
@@ -275,24 +317,33 @@ def main():
     
     if city_name:
         # Plan trip for specific city
+        # Get city data (supports any US city now!)
+        full_city_name, city_info = planner.get_city_data(city_name)
+        
+        if not city_info:
+            print(f"\n❌ Error: Could not find city '{city_name}'.")
+            print("\n📍 Try including the state (e.g., 'Phoenix, AZ')")
+            print("\n💾 Pre-loaded cities:")
+            for city in sorted(MAJOR_US_CITIES.keys()):
+                print(f"   • {city}")
+            print("\n🔍 Any other US city will be fetched dynamically!")
+            sys.exit(1)
+        
         # Plan trip for next available optimal month
-        for city, info in MAJOR_US_CITIES.items():
-            if city.lower() == city_name.lower():
-                next_month = datetime.now().month + 1
-                year = datetime.now().year
-                if next_month > 12:
-                    next_month = 1
-                    year += 1
-                
-                # Find next optimal month
-                for month_offset in range(12):
-                    test_month = (next_month + month_offset - 1) % 12 + 1
-                    test_year = year if (next_month + month_offset) <= 12 else year + 1
-                    
-                    if test_month in info['best_months']:
-                        trip = planner.plan_city_trip(city, test_year, test_month)
-                        print(planner.get_trip_summary(trip))
-                        break
+        next_month = datetime.now().month + 1
+        year = datetime.now().year
+        if next_month > 12:
+            next_month = 1
+            year += 1
+        
+        # Find next optimal month
+        for month_offset in range(12):
+            test_month = (next_month + month_offset - 1) % 12 + 1
+            test_year = year if (next_month + month_offset) <= 12 else year + 1
+            
+            if test_month in city_info['best_months']:
+                trip = planner.plan_city_trip(full_city_name, test_year, test_month)
+                print(planner.get_trip_summary(trip))
                 break
     else:
         # Plan annual tour

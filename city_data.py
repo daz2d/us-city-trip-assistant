@@ -242,6 +242,38 @@ MAJOR_US_CITIES = {
         "central_area": "Gaslamp Quarter",
         "lat": 32.7157,
         "lon": -117.1611
+    },
+    "Atlanta, GA": {
+        "airport_code": "ATL",
+        "alt_airports": [],
+        "best_months": [3, 4, 5, 9, 10, 11],  # Spring and fall
+        "avoid_months": [7, 8],  # Hot and humid
+        "main_attractions": [
+            "Georgia Aquarium",
+            "World of Coca-Cola",
+            "Martin Luther King Jr. National Historical Park",
+            "Piedmont Park",
+            "Fox Theatre"
+        ],
+        "central_area": "Downtown Atlanta",
+        "lat": 33.7490,
+        "lon": -84.3880
+    },
+    "Memphis, TN": {
+        "airport_code": "MEM",
+        "alt_airports": [],
+        "best_months": [4, 5, 9, 10],  # Spring and fall
+        "avoid_months": [7, 8],  # Hot and humid
+        "main_attractions": [
+            "Beale Street",
+            "Graceland",
+            "National Civil Rights Museum",
+            "Sun Studio",
+            "Memphis Zoo"
+        ],
+        "central_area": "Downtown Memphis",
+        "lat": 35.1495,
+        "lon": -90.0490
     }
 }
 
